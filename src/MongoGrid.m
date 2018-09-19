@@ -45,35 +45,41 @@ classdef MongoGrid < handle
             result = handle(obj.GridObj.find(filter));
         end
         
-        function [bytes,metadata] = getGridFile(obj,filename)
+        function [bytes,meta] = getGridFile(obj,filename)
             % Download file from the GridFSBucket with a ByteArrayOutputStream
-            import com.mongodb.client.model.Filters
-            % Create default options
-            options = handle(com.mongodb.client.gridfs.model.GridFSDownloadByNameOptions());
+            import com.mongodb.client.model.Filters.eq
             % Create OutputStream and download
-            stream = handle(java.io.ByteArrayOutputStream());
-            obj.GridObj.downloadToStreamByName(filename,stream,options);
-            stream.close()
-            bytes = stream.toByteArray();
+            ostream = handle(java.io.ByteArrayOutputStream());
+            try
+                obj.GridObj.downloadToStream(filename,ostream);
+            catch err
+                ostream.close();
+                error(char(err.ExceptionObject.getMessage));
+            end
+            ostream.close();
+            bytes = ostream.toByteArray();
             % Download metadata and return as Document
-            metadata = obj.GridObj.find(Filters.eq('filename',filename)).first().getMetadata();
+            meta = obj.GridObj.find(eq('filename',filename)).first().getMetadata();
         end
         
-        function fileID = putGridFile(obj,filename,bytes,metadata)
+        function putGridFile(obj,filename,bytes,meta)
             % Upload file to the GridFSBucket
             if ~isa(bytes,'int8');error('putGridFile requires a int8 array input!');end
             % Create default options
-            options = handle(com.mongodb.client.gridfs.model.GridFSUploadOptions);
+            options = com.mongodb.client.gridfs.model.GridFSUploadOptions();
             % Add the given metadata to options
-            if nargin==4&&isa(metadata,'char')
-                javaMethod('metadata',options,parseJson(metadata));
-            elseif nargin==4&&isa(metadata,'org.bson.Document')
-                javaMethod('metadata',options,metadata);
+            if nargin==4 && isa(meta,'char')
+                options.metadata(parseJson(meta));
+            elseif nargin==4 && isa(meta,'org.bson.Document')
+                options.metadata(meta);
             end
             % Create the InputStream and upload it
             stream = handle(java.io.ByteArrayInputStream(bytes));
-            javaFileID = handle(obj.GridObj.uploadFromStream(filename,stream,options));
-            fileID = javaFileID.toHexString();
+            try
+                obj.GridObj.uploadFromStream(filename,stream,options);
+            catch err
+                error(char(err.ExceptionObject.getMessage));
+            end
         end
     end
 end

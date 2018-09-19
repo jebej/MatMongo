@@ -3,9 +3,9 @@ function [ output_args ] = runtests( input_args )
 %   Detailed explanation goes here
 
 import org.bson.Document
-import java.util.Arrays;
-import java.util.ArrayList;
-import com.mongodb.client.model.Filters;
+import java.util.Arrays
+import java.util.ArrayList
+import com.mongodb.client.model.Filters
 
 
 db = MongoDatabase('testdb','localhost',27017,'siteUserAdmin','adminpass','admin');
