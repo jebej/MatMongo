@@ -50,7 +50,11 @@ classdef MongoCollection < handle
             else
                 error('Invalid function input, only BSON objects or JSON strings are supported.');
             end
-            obj.CollectionObj.insertOne(doc);
+            try
+                obj.CollectionObj.insertOne(doc);
+            catch err
+                error(char(err.ExceptionObject.getMessage));
+            end
         end
         
         function insertMany(obj,docs)
@@ -67,7 +71,25 @@ classdef MongoCollection < handle
             else
                 error('Invalid function input, only ArrayList of BSON objects or JSON strings are supported.');
             end
-            obj.CollectionObj.insertMany(docs);
+            try
+                obj.CollectionObj.insertMany(docs);
+            catch err
+                error(char(err.ExceptionObject.getMessage));
+            end
+        end
+        
+        function upd = updateOne(obj,filter,update,options)
+            % Atomically find a document and update it. Inputs must be a
+            % com.mongodb.client.model.Filters object, and a
+            % com.mongodb.client.model.Updates object. The function returns
+            % the result of the update. If no documents matched the query 
+            % filter, then null will be returned.
+            if nargin==3;options=com.mongodb.client.model.UpdateOptions(); end
+            try
+                upd = handle(obj.CollectionObj.updateOne(filter,update,options));
+            catch err
+                error(char(err.ExceptionObject.getMessage));
+            end
         end
         
         function result = find(obj,filter)
@@ -79,7 +101,11 @@ classdef MongoCollection < handle
             % ArrayList for further processing. This is done as such:
             % list = handle(result.into(java.util.ArrayList))
             if nargin==1;filter=org.bson.Document(); end
-            result = handle(obj.CollectionObj.find(filter));
+            try
+                result = handle(obj.CollectionObj.find(filter));
+            catch err
+                error(char(err.ExceptionObject.getMessage));
+            end
         end
         
         function doc = findOneAndUpdate(obj,filter,update,options)
@@ -90,7 +116,11 @@ classdef MongoCollection < handle
             % If no documents matched the query filter, then null will be
             % returned.
             if nargin==3;options=com.mongodb.client.model.FindOneAndUpdateOptions(); end
-            doc = handle(obj.CollectionObj.findOneAndUpdate(filter,update,options));
+            try
+                doc = handle(obj.CollectionObj.findOneAndUpdate(filter,update,options));
+            catch err
+                error(char(err.ExceptionObject.getMessage));
+            end
         end
         
         function doc = findOneAndReplace(obj,filter,replacement,options)
@@ -102,7 +132,11 @@ classdef MongoCollection < handle
             % it was before the update or as it is after the update. If no
             % documents matched the query filter, then null will be returned
             if nargin==3;options=com.mongodb.client.model.FindOneAndReplaceOptions(); end
-            doc = handle(obj.CollectionObj.findOneAndReplace(filter,replacement,options));
+            try
+                doc = handle(obj.CollectionObj.findOneAndReplace(filter,replacement,options));
+            catch err
+                error(char(err.ExceptionObject.getMessage));
+            end
         end
         
     end
