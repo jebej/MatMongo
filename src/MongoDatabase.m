@@ -47,6 +47,9 @@ classdef MongoDatabase < handle
             if nargin==4;error('You also need to specify a password!');end
             if nargin>=5;obj.UseAuth=1;obj.Username=username;obj.Password=password;end
             if nargin==6;obj.AuthDB=authdb;else; obj.AuthDB=dbname;end
+            % Silence log4j
+            import org.apache.log4j.*
+            Logger.getRootLogger().setLevel(Level.OFF);
             % Open the connection
             obj.open();
             % Check if the connection is ok
@@ -74,9 +77,6 @@ classdef MongoDatabase < handle
         function open(obj)
             % Open connection to the database
             if strcmp(obj.Status,'open');error('Connection is already open!');end
-            % Silence log4j
-            import org.apache.log4j.*
-            Logger.getRootLogger().setLevel(Level.OFF);
             % Import driver classes
             import com.mongodb.*
             % Create a Mongo ServerAddress object
@@ -123,7 +123,7 @@ classdef MongoDatabase < handle
                     % Looks like the authentication failed
                     error('Authentication failed!');
                 elseif any(strfind(errMsg,'UnknownHostException'))
-                    % Uknown host
+                    % Unknown host
                     error('Unknown host %d!',obj.Server);
                 elseif any(strfind(errMsg,'Connection refused: connect'))
                     % Connection refused
