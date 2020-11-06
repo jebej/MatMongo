@@ -25,10 +25,15 @@ classdef MongoCollection < handle
             obj.ParentDatabase = db.Name;
         end
         
+        function delete(obj)
+            delete(obj.CollectionObj); obj.CollectionObj=[];
+            delete(obj);
+        end
+        
         function dropCollection(obj)
             % Drop this collection, will delete the MongoCollection object
+            % WARNING: this deletes the collection from the database
             obj.CollectionObj.drop();
-            delete(obj.CollectionObj); obj.CollectionObj=[];
             delete(obj);
         end
         
@@ -53,7 +58,7 @@ classdef MongoCollection < handle
             try
                 obj.CollectionObj.insertOne(doc);
             catch err
-                error(char(err.ExceptionObject.getMessage));
+                MongoCollection.rethrowErr(err);
             end
         end
         
@@ -74,7 +79,7 @@ classdef MongoCollection < handle
             try
                 obj.CollectionObj.insertMany(docs);
             catch err
-                error(char(err.ExceptionObject.getMessage));
+                MongoCollection.rethrowErr(err);
             end
         end
         
@@ -86,9 +91,9 @@ classdef MongoCollection < handle
             % filter, then null will be returned.
             if nargin==3;options=com.mongodb.client.model.UpdateOptions(); end
             try
-                upd = handle(obj.CollectionObj.updateOne(filter,update,options));
+                upd = obj.CollectionObj.updateOne(filter,update,options);
             catch err
-                error(char(err.ExceptionObject.getMessage));
+                MongoCollection.rethrowErr(err);
             end
         end
         
@@ -104,7 +109,7 @@ classdef MongoCollection < handle
             try
                 result = handle(obj.CollectionObj.find(filter));
             catch err
-                error(char(err.ExceptionObject.getMessage));
+                MongoCollection.rethrowErr(err);
             end
         end
         
@@ -119,7 +124,7 @@ classdef MongoCollection < handle
             try
                 doc = handle(obj.CollectionObj.findOneAndUpdate(filter,update,options));
             catch err
-                error(char(err.ExceptionObject.getMessage));
+                MongoCollection.rethrowErr(err);
             end
         end
         
@@ -135,10 +140,23 @@ classdef MongoCollection < handle
             try
                 doc = handle(obj.CollectionObj.findOneAndReplace(filter,replacement,options));
             catch err
-                error(char(err.ExceptionObject.getMessage));
+                MongoCollection.rethrowErr(err);
             end
         end
         
+    end
+    
+    methods (Static)
+        function rethrowErr(err)
+            % Throw nice error whether the error is from MATLAB or Java
+            if isa(err,'MException')
+                throwAsCaller(err);
+            else
+                msg = char(err.ExceptionObject.getMessage);
+                ME = MException('MongoCollection:error',msg);
+                throwAsCaller(ME);
+            end
+        end
     end
     
 end

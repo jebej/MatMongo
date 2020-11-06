@@ -7,8 +7,8 @@ classdef MongoDatabase < handle
     properties (SetAccess = private)
         Name
         Status = 'closed'
-        Username = 'noUser'
-        Roles = {'noRoles'}
+        Username = ''
+        Roles = {''}
         Server = 'localhost'
         Port = 27017
     end
@@ -32,8 +32,8 @@ classdef MongoDatabase < handle
         function names = get.CollectionNames(obj)
             % Get collection names
             if strcmp(obj.Status,'closed');error('Database connection is closed!');end
-            namesArray = handle(obj.DatabaseObj.listCollectionNames.into(java.util.ArrayList()));
-            names = cell(namesArray.toArray()).';
+            namesList = handle(obj.DatabaseObj.listCollectionNames.into(java.util.ArrayList()));
+            names = cell(namesList.toArray()).';
         end
     end
     
@@ -48,7 +48,7 @@ classdef MongoDatabase < handle
             if nargin>=5;obj.UseAuth=1;obj.Username=username;obj.Password=password;end
             if nargin==6;obj.AuthDB=authdb;else; obj.AuthDB=dbname;end
             % Silence log4j
-            import org.apache.log4j.*
+            import org.apache.log4j.Logger; import org.apache.log4j.Level;
             Logger.getRootLogger().setLevel(Level.OFF);
             % Open the connection
             obj.open();
